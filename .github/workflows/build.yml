@@ -1,46 +1,19 @@
 name: Build EXE
-
 on: [push, workflow_dispatch]
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install MinGW (32-bit)
+      - uses: actions/checkout@v4
+      - name: Install MinGW
+        run: sudo apt-get update && sudo apt-get install -y g++-mingw-w64-i686
+      - name: Compile
         run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-mingw-w64-i686
-
-      - name: Compile resource (icon)
-        run: |
-          # Hanya compile resource jika file resource.rc ada
-          if [ -f resource.rc ]; then
-            i686-w64-mingw32-windres resource.rc -O coff -o resource.o
-          else
-            echo "resource.rc tidak ditemukan, melewati tahap icon."
-          fi
-
-      - name: Compile C++ to EXE
-        run: |
-          if [ -f resource.o ]; then
-            # Compile jika ada resource icon
-            i686-w64-mingw32-g++ femboywiper.cpp resource.o -o app.exe -O2 -std=c++17 \
-              -static -static-libgcc -static-libstdc++ \
-              -lwinhttp -lbcrypt \
-              -D_WIN32_WINNT=0x0601 -s
-          else
-            # Compile tanpa resource icon
-            i686-w64-mingw32-g++ femboywiper.cpp -o app.exe -O2 -std=c++17 \
-              -static -static-libgcc -static-libstdc++ \
-              -lwinhttp -lbcrypt \
-              -D_WIN32_WINNT=0x0601 -s
-          fi
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+          i686-w64-mingw32-g++ femboywiper.cpp -o app.exe -O2 -std=c++17 \
+            -static -static-libgcc -static-libstdc++ \
+            -lwinhttp -lbcrypt -lws2_32 -lcrypt32 \
+            -D_WIN32_WINNT=0x0601 -s
+      - uses: actions/upload-artifact@v4
         with:
           name: FemboyOriginals
           path: app.exe
